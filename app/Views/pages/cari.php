@@ -1,0 +1,588 @@
+<?= $this->extend('layouts/main-home') ?>
+<?= $this->section('content') ?>
+
+<main class="pt-20 lg:pt-24 grid grid-cols-1 lg:grid-cols-12 min-h-screen">
+    <!-- CSRF carrier (CI4 rotates token tiap request) -->
+    <input type="hidden" id="csrf-name" value="<?= csrf_token() ?>">
+    <input type="hidden" id="csrf-hash" value="<?= csrf_hash() ?>">
+
+    <!-- Backdrop drawer filter (mobile only) -->
+    <div id="filter-backdrop" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
+
+    <!-- Refined Sidebar Filter: drawer di mobile, kolom statis di desktop -->
+    <aside id="filter-panel" class="fixed inset-y-0 left-0 z-99999 w-[85%] max-w-sm -translate-x-full transition-transform duration-300 ease-in-out bg-background shadow-2xl p-6 overflow-y-auto border-r border-border custom-scrollbar lg:static lg:inset-auto lg:z-auto lg:translate-x-0 lg:w-auto lg:max-w-none lg:col-span-3 lg:p-10 lg:shadow-none">
+        <div class="flex items-center justify-between mb-10">
+            <h2 class="text-lg font-headline font-bold text-foreground">Filter</h2>
+            <div class="flex items-center gap-3">
+                <button id="reset-filters" class="text-primary font-bold text-[10px] tracking-widest uppercase hover:underline">Reset Semua</button>
+                <!-- Tutup drawer (mobile only) -->
+                <button id="filter-panel-close" class="lg:hidden shrink-0 w-7 h-7 flex items-center justify-center rounded-lg bg-secondary hover:bg-background transition-all">
+                    <span class="material-symbols-outlined text-[18px]!">close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- School Type (jenjang) -->
+        <div class="mb-10">
+            <label class="block font-bold text-[10px] tracking-widest text-muted-foreground uppercase mb-4">Jenjang Pendidikan</label>
+            <div class="flex flex-col gap-2" id="jenjang-group">
+                <button type="button" data-value="" class="jenjang-btn hover:border-primary/30 cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold border bg-primary/5 text-primary border-primary/20 transition-all">
+                    <span>Semua Jenjang</span>
+                    <span class="material-symbols-outlined text-[18px]! check-icon">check_circle</span>
+                </button>
+                <button type="button" data-value="TK" class="jenjang-btn hover:border-primary/30 cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium border bg-muted/50 text-muted-foreground border-transparent transition-all">
+                    <span>TK</span>
+                    <span class="material-symbols-outlined text-[18px]! check-icon hidden">check_circle</span>
+                </button>
+                <button type="button" data-value="SD" class="jenjang-btn hover:border-primary/30 cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium border bg-muted/50 text-muted-foreground border-transparent transition-all">
+                    <span>SD</span>
+                    <span class="material-symbols-outlined text-[18px]! check-icon hidden">check_circle</span>
+                </button>
+                <button type="button" data-value="SMP" class="jenjang-btn hover:border-primary/30 cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium border bg-muted/50 text-muted-foreground border-transparent transition-all">
+                    <span>SMP</span>
+                    <span class="material-symbols-outlined text-[18px]! check-icon hidden">check_circle</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="mb-10">
+            <label class="block font-bold text-[10px] tracking-widest text-muted-foreground uppercase mb-4">Status Lembaga</label>
+            <div class="grid grid-cols-2 gap-3" id="status-group">
+                <label class="status-option relative flex items-center justify-center p-3 rounded-xl border-2 border-border bg-background cursor-pointer hover:border-primary/30 transition-all" data-value="Negeri">
+                    <input type="checkbox" class="hidden status-checkbox">
+                    <span class="text-xs font-semibold text-muted-foreground">Negeri</span>
+                </label>
+                <label class="status-option relative flex items-center justify-center p-3 rounded-xl border-2 border-border bg-background cursor-pointer hover:border-primary/30 transition-all" data-value="Swasta">
+                    <input type="checkbox" class="hidden status-checkbox">
+                    <span class="text-xs font-semibold text-muted-foreground">Swasta</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Accreditation -->
+        <div class="mb-10">
+            <label class="block font-bold text-[10px] tracking-widest text-muted-foreground uppercase mb-4">Akreditasi</label>
+            <div class="grid grid-cols-2 gap-2" id="akreditasi-group">
+                <button type="button" data-value="A" class="akreditasi-btn p-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all hover:border-primary/30 cursor-pointer bg-muted/50 text-muted-foreground border-border">
+                    <span class="w-1.5 h-1.5 rounded-full dot bg-muted-foreground"></span> A
+                </button>
+                <button type="button" data-value="B" class="akreditasi-btn p-3 rounded-xl border font-bold text-xs transition-all hover:border-primary/30 cursor-pointer bg-muted/50 text-muted-foreground border-border">B</button>
+                <button type="button" data-value="C" class="akreditasi-btn p-3 rounded-xl border font-bold text-xs transition-all hover:border-primary/30 cursor-pointer bg-muted/50 text-muted-foreground border-border">C</button>
+                <button type="button" data-value="Baru" class="akreditasi-btn p-3 rounded-xl border font-bold text-xs transition-all hover:border-primary/30 cursor-pointer bg-muted/50 text-muted-foreground border-border">Baru</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <section class="p-4 sm:p-6 md:p-8 lg:p-12 col-span-1 lg:col-span-9">
+        <!-- Header & Controls -->
+        <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4 sm:gap-6 lg:gap-8 mb-8 lg:mb-12">
+            <div>
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-headline font-bold text-foreground mb-3 tracking-tight">Eksplorasi <span class="text-primary">Sekolah</span></h1>
+                <p class="text-muted-foreground text-sm font-medium">
+                    Menampilkan <span class="text-foreground font-bold" id="total-count"><?= (int) $initialData['total'] ?></span> institusi pendidikan terbaik di zona Anda.
+                </p>
+            </div>
+            <div class="flex w-full md:w-fit flex-col sm:flex-row justify-end md:self-end gap-4">
+                <div class="relative w-auto sm:min-w-[320px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2  text-muted-foreground">search</span>
+                    <input
+                        id="search-input"
+                        type="text"
+                        placeholder="Cari sekolah..."
+                        class="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-primary/50 bg-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
+                </div>
+                <div class="relative w-full sm:w-auto sm:min-w-[160px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ">sort</span>
+                    <select id="sort-select" class="w-full appearance-none pl-10 pr-4 py-3 bg-slate-100 border border-primary/50 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/50">
+                        <option value="rekomendasi">Rekomendasi</option>
+                        <option value="akreditasi">Akreditasi</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="results-container" class="relative">
+            <!-- Loading indicator -->
+            <div id="loading-overlay" class="hidden absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-2xl">
+                <div class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-state" class="<?= empty($initialData['data']) ? '' : 'hidden' ?> text-center py-20 text-muted-foreground text-sm font-medium">
+                Tidak ada sekolah yang cocok dengan filter ini.
+            </div>
+
+            <!-- Results Grid -->
+            <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                <?php foreach ($initialData['data'] as $sekolah): ?>
+                    <a href="<?= base_url('sekolah') ?>/<?= esc($sekolah['slug']) ?>" class="school-card-vibrant bg-card text-card-foreground rounded-2xl overflow-hidden border border-border/50 cursor-pointer group block">
+                        <div class="relative aspect-video overflow-hidden">
+                            <?php if (!empty($sekolah['foto_utama'])): ?>
+                                <img
+                                    alt="<?= esc($sekolah['nama_sekolah']) ?>"
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    src="<?= base_url('uploads/sekolah/' . esc($sekolah['foto_utama'])) ?>">
+                            <?php else: ?>
+                                <div class="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-4xl! text-slate-400">school</span>
+                                </div>
+                            <?php endif; ?>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                            <!-- <div class="absolute top-3 left-3 flex gap-2">
+                                <span class="text-[9px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-widest text-white badge-<?= $sekolah['jenjang'] ?>">
+                                    <?= esc($sekolah['jenjang']) ?>
+                                </span>
+                            </div> -->
+                            <div class="absolute top-3 right-3 flex gap-2">
+                                <span class="text-[9px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-widest <?= $sekolah['status'] === 'Negeri' ? 'bg-primary text-primary-foreground' : 'bg-warning text-secondary-foreground' ?>">
+                                    <?= esc($sekolah['status']) ?>
+                                </span>
+                            </div>
+                            <div class="absolute bottom-3 right-3">
+                                <span class="text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg <?= $sekolah['akreditasi'] === 'A' ? 'bg-success' : 'bg-muted-foreground' ?>">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                    <?= $sekolah['akreditasi'] === 'Belum Terakreditasi' ? 'Baru' : esc($sekolah['akreditasi']) ?>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-5 flex flex-col gap-4 md:gap-2.5">
+                            <div class="flex flex-col gap-0.5">
+                                <h3 class="font-headline font-bold text-base group-hover:text-primary transition-colors"><?= esc($sekolah['nama_sekolah']) ?></h3>
+                                <h3 class=" group-hover:text-primary transition-colors">NPSN <?= esc($sekolah['npsn']) ?></h3>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-muted-foreground">
+                                <span class="material-symbols-outlined text-[18px]! text-primary">location_on</span>
+                                <span class="text-[13px] line-clamp-1">
+                                    <?= !empty($sekolah['alamat']) ? esc($sekolah['alamat']) . ', ' : '' ?><?= !empty($sekolah['nama_kecamatan']) ? 'Kec. ' . esc($sekolah['nama_kecamatan']) : '' ?>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Modern Pagination -->
+        <div id="pagination" class="<?= (int)$initialData['total_pages'] <= 1 ? 'hidden' : '' ?> flex justify-center items-center gap-3 mt-20 pb-20"></div>
+    </section>
+</main>
+
+<button id="filter-open-btn" type="button" class="lg:hidden fixed bottom-8 right-8 h-14 px-6 bg-primary text-primary-foreground rounded-full shadow-2xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all z-30">
+    <span class="material-symbols-outlined">tune</span>
+    <span class="font-bold text-xs uppercase tracking-wider">Filter</span>
+</button>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    (function() {
+        const state = {
+            jenjang: '',
+            status: [],
+            akreditasi: [],
+            search: '',
+            sort: 'rekomendasi',
+            page: <?= (int) $initialData['page'] ?>,
+            totalPages: <?= (int) $initialData['total_pages'] ?>
+        };
+
+        const csrfNameInput = document.getElementById('csrf-name');
+        const csrfHashInput = document.getElementById('csrf-hash');
+
+        const grid = document.getElementById('results-grid');
+        const emptyState = document.getElementById('empty-state');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const totalCount = document.getElementById('total-count');
+        const pagination = document.getElementById('pagination');
+        const sortSelect = document.getElementById('sort-select');
+
+        // --- Drawer Filter (mobile) ---
+        const filterPanel = document.getElementById('filter-panel');
+        const filterBackdrop = document.getElementById('filter-backdrop');
+        const filterOpenBtn = document.getElementById('filter-open-btn');
+        const filterCloseBtn = document.getElementById('filter-panel-close');
+        const mqDesktop = window.matchMedia('(min-width: 1024px)');
+
+        function openFilterPanel() {
+            filterPanel.classList.remove('-translate-x-full');
+            filterBackdrop.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeFilterPanel() {
+            filterPanel.classList.add('-translate-x-full');
+            filterBackdrop.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        filterOpenBtn?.addEventListener('click', openFilterPanel);
+        filterCloseBtn?.addEventListener('click', closeFilterPanel);
+        filterBackdrop?.addEventListener('click', closeFilterPanel);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeFilterPanel();
+        });
+
+        // Kalau layar di-resize ke ukuran desktop (lg) saat drawer sedang terbuka,
+        // reset state supaya tidak "nyangkut" saat kembali ke ukuran mobile
+        mqDesktop.addEventListener('change', (e) => {
+            if (e.matches) closeFilterPanel();
+        });
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function cardHtml(school) {
+            const statusBadgeClass = school.status === 'Negeri' ?
+                'bg-primary text-primary-foreground' :
+                'bg-warning text-secondary-foreground';
+
+            const akreditasiDotClass = school.akreditasi === 'A' ? 'bg-success' : 'bg-muted-foreground';
+            const akreditasiLabel = school.akreditasi === 'Belum Terakreditasi' ? 'Baru' : school.akreditasi;
+
+            const fotoSrc =
+                '<?= base_url('uploads/sekolah') ?>/' + encodeURIComponent(school.foto_utama);
+
+            const alamat = school.alamat ? `${escapeHtml(school.alamat)}, ` : '';
+            const kecamatan = school.nama_kecamatan ? `Kec. ${escapeHtml(school.nama_kecamatan)}` : '';
+
+
+            return `
+            <a href="<?= base_url('sekolah') ?>/${encodeURIComponent(school.slug)}" class="school-card-vibrant bg-card text-card-foreground rounded-2xl overflow-hidden border border-border/50 cursor-pointer group block">
+                <div class="relative aspect-video overflow-hidden">
+                 ${school.foto_utama ? `
+                    <img
+                        alt="${escapeHtml(school.nama_sekolah)}"
+                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        src="${fotoSrc}"
+                    >
+                    ` : `
+                    <div class="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl! text-slate-400">school</span>
+                    </div>
+                `}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent  to-transparent"></div>
+                    <div class="absolute top-3 right-3 flex gap-2">
+                        <span class="text-[9px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-widest ${statusBadgeClass}">${escapeHtml(school.status)}</span>
+                    </div>
+                    <div class="absolute bottom-3 right-3">
+                        <span class="text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg ${akreditasiDotClass}">
+                            <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                            ${escapeHtml(akreditasiLabel)}
+                        </span>
+                    </div>
+                </div>
+                <div class="p-5 flex flex-col gap-4 md:gap-2.5">
+                    <div class="flex flex-col gap-0.5">
+                        <h3 class="font-headline font-bold text-base group-hover:text-primary transition-colors">${escapeHtml(school.nama_sekolah)}</h3>
+                        <h3 class=" group-hover:text-primary transition-colors">NPSN ${escapeHtml(school.npsn)}</h3>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-muted-foreground ">
+                        <span class="material-symbols-outlined text-[18px]! text-primary">location_on</span>
+                        <span class="text-[13px] line-clamp-1">${alamat}${kecamatan}</span>
+                    </div>
+                </div>
+            </a>
+        `;
+        }
+
+        function renderGrid(schools) {
+            if (!schools || schools.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            grid.innerHTML = schools.map(cardHtml).join('');
+        }
+
+        function renderPagination() {
+            const {
+                page,
+                totalPages
+            } = state;
+
+            if (totalPages <= 1) {
+                pagination.classList.add('hidden');
+                pagination.innerHTML = '';
+                return;
+            }
+            pagination.classList.remove('hidden');
+
+            let pages = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (page > 3) pages.push('...');
+                const start = Math.max(2, page - 1);
+                const end = Math.min(totalPages - 1, page + 1);
+                for (let i = start; i <= end; i++) pages.push(i);
+                if (page < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            let html = `
+            <button data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''} class="page-btn w-10 h-10 rounded-xl border border-border bg-card hover:border-primary hover:text-primary transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]!">chevron_left</span>
+            </button>
+        `;
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    html += `<span class="px-2 text-muted-foreground/30 text-xs font-bold">...</span>`;
+                } else {
+                    const active = p === page;
+                    html += `
+                    <button data-page="${p}" class="page-btn w-10 h-10 rounded-xl font-bold text-xs transition-all ${active
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        : 'border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary'}">
+                        ${p}
+                    </button>
+                `;
+                }
+            });
+
+            html += `
+            <button data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''} class="page-btn w-10 h-10 rounded-xl border border-border bg-card hover:border-primary hover:text-primary transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]!">chevron_right</span>
+            </button>
+        `;
+
+            pagination.innerHTML = html;
+        }
+
+        let currentController = null;
+
+        async function fetchData(page) {
+            // batalkan request sebelumnya kalau masih jalan
+            if (currentController) currentController.abort();
+            currentController = new AbortController();
+
+            loadingOverlay.classList.remove('hidden');
+            grid.classList.add('opacity-40');
+
+            const body = {
+                jenjang: state.jenjang,
+                status: state.status,
+                akreditasi: state.akreditasi,
+                search: state.search,
+                sort: state.sort,
+                page: page
+            };
+            body[csrfNameInput.value] = csrfHashInput.value;
+
+            try {
+                const res = await fetch('<?= site_url('cari/filter') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(body),
+                    signal: currentController.signal
+                });
+
+                if (!res.ok) throw new Error('Request gagal: ' + res.status);
+
+                const data = await res.json();
+
+                state.page = data.page;
+                state.totalPages = data.total_pages;
+
+                totalCount.textContent = data.total;
+                renderGrid(data.data);
+                renderPagination();
+
+                if (data.csrf_token) {
+                    csrfHashInput.value = data.csrf_token;
+                }
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error('Gagal memuat data sekolah:', e);
+                }
+                return; // jangan hilangkan overlay kalau request ini sudah dibatalkan
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                grid.classList.remove('opacity-40');
+            }
+        }
+
+
+        // --- Jenjang ---
+        const jenjangGroup = document.getElementById('jenjang-group');
+        jenjangGroup.addEventListener('click', (e) => {
+            const btn = e.target.closest('.jenjang-btn');
+            if (!btn) return;
+
+            state.jenjang = btn.dataset.value;
+
+            jenjangGroup.querySelectorAll('.jenjang-btn').forEach(b => {
+                const isActive = b === btn;
+                b.classList.toggle('bg-primary/5', isActive);
+                b.classList.toggle('text-primary', isActive);
+                b.classList.toggle('border-primary/20', isActive);
+                b.classList.toggle('font-bold', isActive);
+                b.classList.toggle('bg-muted/50', !isActive);
+                b.classList.toggle('text-muted-foreground', !isActive);
+                b.classList.toggle('border-transparent', !isActive);
+                b.classList.toggle('font-medium', !isActive);
+                b.querySelector('.check-icon').classList.toggle('hidden', !isActive);
+            });
+
+            fetchData(1);
+        });
+
+        // --- Status ---
+        const statusGroup = document.getElementById('status-group');
+        statusGroup.addEventListener('click', (e) => {
+            const label = e.target.closest('.status-option');
+            if (!label) return;
+
+            e.preventDefault(); // <-- tambahan: cegah browser toggle checkbox secara native
+
+            const value = label.dataset.value;
+            const checkbox = label.querySelector('.status-checkbox');
+            const idx = state.status.indexOf(value);
+
+            if (idx > -1) {
+                state.status.splice(idx, 1);
+                checkbox.checked = false;
+            } else {
+                state.status.push(value);
+                checkbox.checked = true;
+            }
+
+            label.classList.toggle('border-primary', checkbox.checked);
+            label.classList.toggle('bg-primary/5', checkbox.checked);
+            label.classList.toggle('border-border', !checkbox.checked);
+            label.classList.toggle('bg-background', !checkbox.checked);
+
+            const span = label.querySelector('span:not(.material-symbols-outlined)');
+            span.classList.toggle('text-primary', checkbox.checked);
+            span.classList.toggle('text-muted-foreground', !checkbox.checked);
+
+            fetchData(1);
+        });
+
+        // --- Akreditasi ---
+        const akreditasiGroup = document.getElementById('akreditasi-group');
+        akreditasiGroup.addEventListener('click', (e) => {
+            const btn = e.target.closest('.akreditasi-btn');
+            if (!btn) return;
+
+            const value = btn.dataset.value;
+            const idx = state.akreditasi.indexOf(value);
+            const active = idx === -1;
+
+            if (active) state.akreditasi.push(value);
+            else state.akreditasi.splice(idx, 1);
+
+            btn.classList.toggle('bg-primary/10', active);
+            btn.classList.toggle('text-primary', active);
+            btn.classList.toggle('border-primary/20', active);
+            btn.classList.toggle('bg-muted/50', !active);
+            btn.classList.toggle('text-muted-foreground', !active);
+            btn.classList.toggle('border-border', !active);
+
+            const dot = btn.querySelector('.dot');
+            if (dot) {
+                dot.classList.toggle('bg-success', active);
+                dot.classList.toggle('bg-muted-foreground', !active);
+            }
+
+            fetchData(1);
+        });
+
+        // --- Sort ---
+        sortSelect.addEventListener('change', () => {
+            state.sort = sortSelect.value;
+            fetchData(1);
+        });
+
+        const searchInput = document.getElementById('search-input');
+        let searchDebounceTimer = null;
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                state.search = searchInput.value.trim();
+                fetchData(1);
+            }, 400); // tunggu 400ms setelah user berhenti mengetik
+        });
+
+        // --- Reset ---
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            state.jenjang = '';
+            state.status = [];
+            state.akreditasi = [];
+            state.search = '';
+            searchInput.value = '';
+            state.sort = 'rekomendasi';
+            sortSelect.value = 'rekomendasi';
+
+            jenjangGroup.querySelectorAll('.jenjang-btn').forEach(b => {
+                const isActive = b.dataset.value === '';
+                b.classList.toggle('bg-primary/5', isActive);
+                b.classList.toggle('text-primary', isActive);
+                b.classList.toggle('border-primary/20', isActive);
+                b.classList.toggle('font-bold', isActive);
+                b.classList.toggle('bg-muted/50', !isActive);
+                b.classList.toggle('text-muted-foreground', !isActive);
+                b.classList.toggle('border-transparent', !isActive);
+                b.classList.toggle('font-medium', !isActive);
+                b.querySelector('.check-icon').classList.toggle('hidden', !isActive);
+            });
+
+            statusGroup.querySelectorAll('.status-option').forEach(label => {
+                const checkbox = label.querySelector('.status-checkbox');
+                checkbox.checked = false;
+                label.classList.remove('border-primary', 'bg-primary/5');
+                label.classList.add('border-border', 'bg-background');
+                const span = label.querySelector('span:not(.material-symbols-outlined)');
+                span.classList.remove('text-primary');
+                span.classList.add('text-muted-foreground');
+            });
+
+            akreditasiGroup.querySelectorAll('.akreditasi-btn').forEach(btn => {
+                btn.classList.remove('bg-success/10', 'text-success', 'border-success/20');
+                btn.classList.add('bg-muted/50', 'text-muted-foreground', 'border-border');
+                const dot = btn.querySelector('.dot');
+                if (dot) {
+                    dot.classList.remove('bg-success');
+                    dot.classList.add('bg-muted-foreground');
+                }
+            });
+
+            fetchData(1);
+        });
+
+        // --- Pagination ---
+        pagination.addEventListener('click', (e) => {
+            const btn = e.target.closest('.page-btn');
+            if (!btn || btn.disabled) return;
+
+            const targetPage = parseInt(btn.dataset.page, 10);
+            if (!targetPage || targetPage < 1 || targetPage > state.totalPages || targetPage === state.page) return;
+
+            fetchData(targetPage);
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        renderPagination();
+    })();
+</script>
+<?= $this->endSection() ?>
